@@ -1,40 +1,42 @@
 $(function(){
-
-  // $('#video-stream').networkCamera({
-  //   url: 'http://192.168.1.107/cgi-bin/api.cgi?cmd=Snap&channel=0&user=admin&password=a1121@C1123',
-  // });
-  // $('#video-stream').networkCamera('stream');
-  // setInterval(function(){
-  //   d = new Date();
-  //   var url = "http://192.168.1.107/cgi-bin/api.cgi?cmd=Snap&channel=0&user=admin&password=a1121C1123" + '&'+ d.getTime();
-  //   $('#video-stream').css('background-image', 'url(' + url + ')');
-  // },1000);
-
+  var req;
   d = new Date();
   var url = "http://192.168.1.107/cgi-bin/api.cgi?cmd=Snap&channel=0&user=root&password=123456" + '&'+ d.getTime();
   $('#video-stream').css('background-image', 'url(' + url + ')');
 
   //send request to IP Camera
-  var url="http://192.168.1.107/cgi-bin/api.cgi?user=root&password=123456&cmd=PtzCtrl&token=141263da251ab9e";
+  var ctrlUrl="http://192.168.1.107/cgi-bin/api.cgi?user=root&password=123456&cmd=PtzCtrl&token=141263da251ab9e";
   var json;
-  $('#btn-up').click(function(e){
+  $('#btn-up').on('mousedown', function(e) {
     e.preventDefault();
     json = [{"cmd": "PtzCtrl", "action": 0, "param": {"channel": 0, "op": "Up", "speed": 32}}];
     makeRequest();
+  }).on('mouseup', function() {
+    json = [{"cmd": "PtzCtrl", "action": 0, "param": {"channel": 0, "op": "Stop"}}];
+    makeRequest();
   });
-  $('#btn-down').click(function(e){
+  $('#btn-down').on('mousedown', function(e) {
     e.preventDefault();
     json = [{"cmd": "PtzCtrl", "action": 0, "param": {"channel": 0, "op": "Down", "speed": 32}}];
     makeRequest();
+  }).on('mouseup', function() {
+    json = [{"cmd": "PtzCtrl", "action": 0, "param": {"channel": 0, "op": "Stop"}}];
+    makeRequest();
   });
-  $('#btn-left').click(function(e){
+  $('#btn-left').on('mousedown', function(e) {
     e.preventDefault();
     json = [{"cmd": "PtzCtrl", "action": 0, "param": {"channel": 0, "op": "Left", "speed": 32}}];
     makeRequest();
+  }).on('mouseup', function() {
+    json = [{"cmd": "PtzCtrl", "action": 0, "param": {"channel": 0, "op": "Stop"}}];
+    makeRequest();
   });
-  $('#btn-right').click(function(e){
+  $('#btn-right').on('mousedown', function(e) {
     e.preventDefault();
     json = [{"cmd": "PtzCtrl", "action": 0, "param": {"channel": 0, "op": "Right", "speed": 32}}];
+    makeRequest();
+  }).on('mouseup', function() {
+    json = [{"cmd": "PtzCtrl", "action": 0, "param": {"channel": 0, "op": "Stop"}}];
     makeRequest();
   });
   $('#btn-test').click(function(e){
@@ -45,20 +47,20 @@ $(function(){
 
   function makeRequest(){
     //create request for shopify
-    var req=new XMLHttpRequest();
+    req = new XMLHttpRequest();
 
-    req.onreadystatechange=function(e) {
-      if(req.readyState==4) {
-        var showErrorTab=false;
-        if(req.status==200) {
-          console.log("response:"+req.responseText);
-        } else {
-          console.log("Error calling PtzCtrl");
-        }
-      }
-    }
+    // req.onreadystatechange=function(e) {
+    //   if(req.readyState==4) {
+    //     var showErrorTab=false;
+    //     if(req.status==200) {
+    //       console.log("response:"+req.responseText);
+    //     } else {
+    //       console.log("Error calling PtzCtrl");
+    //     }
+    //   }
+    // }
 
-    req.open("POST",url);
+    req.open("POST",ctrlUrl);
     req.setRequestHeader("Accept","application/json");
     req.send(JSON.stringify(json));
   }
