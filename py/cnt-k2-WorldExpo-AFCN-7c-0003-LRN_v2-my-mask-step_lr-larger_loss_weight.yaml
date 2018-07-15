@@ -1,0 +1,293 @@
+---
+# make conv 1 and 3 adaptive
+exp_name: cnt-k2-WorldExpo-AFCN-7c-0003-LRN_v2-my-mask-step_lr-larger_loss_weight
+
+description: This is the new setting YAML file for tensorflow DL training
+
+dp_params:
+    dataset: WorldExpo
+    train:
+        data_file: /opt/visal/di/data/datasets_for_dp_new_format/WorldExpo/part_based_my_label/train_scenes_gray_my_label.txt
+        coords_file: /opt/visal/di/data/datasets_for_dp_new_format/WorldExpo/part_based/train_scenes_coords.txt
+        batch_size: 32
+        pixel_patch_image: patch
+        scale: True
+        shift: True
+        flag_flip: False
+        flag_noise: False
+        std_noise: 0
+    vali:
+        data_file: /opt/visal/di/data/datasets_for_dp_new_format/WorldExpo/scene_based_my_label/test_scenes_gray_my_label.txt
+        coords_file: /opt/visal/di/data/datasets_for_dp_new_format/WorldExpo/scene_based/test_scenes_coords.txt
+        batch_size: 32
+        pixel_patch_image: patch
+        scale: True
+        shift: True
+        flag_flip: False
+        flag_noise: False
+        std_noise: 0
+    test:
+        data_file: dummy
+        batch_size: 10
+        pixel_patch_image: bar
+        scale: True
+        shift: True
+        flag_flip: False
+        flag_noise: False
+        std_noise: 0
+        write_test_feature_from: /opt/visal/di/data/datasets_for_dp_new_format/WorldExpo/scene_based_my_label/test_scenes_gray_my_label.txt
+
+solver_params:
+    auto_resume: True
+    scaler_stability_factor: 100
+    solver: sgd
+    lr_base: 0.001
+    lr_policy: step
+    step: 30000
+    lr_decay: 0.71
+    weight_decay: 0.0005
+    DataProvider: coords_v3_patch
+    momentum: 0.9
+    test_iter: 10
+    test_interval: 100
+    display_interval: 100
+    max_iter: 600000
+    snapshot_interval: 20000
+    root_dir: /opt/visal/di/models/models_keras2/model_WorldExpo
+
+network_params:
+    # do not support lr_mult and layer type and input yet
+    net_name: AFCN
+    backend: tensorflow  # do not support yet
+    arch_type:
+        rgr_dim: 2
+        down_res_factor: 4
+    output_masks:
+        name: output_masks
+        type: input
+        input: None
+        dim_c: 1
+        dim_h: 32
+        dim_w: 32
+    patches:
+        name: patches
+        type: input
+        input: None
+        dim_c: 1
+        dim_h: 128
+        dim_w: 128
+    aux_params:
+        name: aux_params
+        type: input
+        input: None
+        dim: 1
+        perspective: True
+    conv_block_1:
+        name: conv_block_1
+        type: adaptive_conv_block
+        input: patches
+        conv:
+            type: xlayer_b
+            nb_out_feat_map: 16
+            filter_h: 5
+            filter_w: 5
+            stride_h: 1
+            stride_w: 1
+            border_mode: same
+            bias: True
+            FMN:
+                fc_1:
+                    nb_out: 10
+                    activation: tanh
+                    std_gaussian: 0.01
+                    decay_mult: 10
+                    norm: dropout
+                fc_2:
+                    nb_out: 40
+                    activation: tanh
+                    std_gaussian: 0.01
+                    decay_mult: 10
+                    norm: dropout
+                fc_3:
+                    nb_out: 416
+                    activation: linear
+                    std_gaussian: 0.01
+                    decay_mult: 10
+                    norm: False
+            trainable: True
+            decay_mult: 1
+            lr_mult: 1
+        act:
+            type: relu
+        norm:
+            type: lrn
+            local_size: 5
+            alpha: 0.01
+            beta: 0.75
+            k: 1
+    conv_block_2:
+        name: conv_block_2
+        type: conv_block
+        input: conv_block_1
+        conv:
+            type: conv2d
+            nb_out_feat_map: 16
+            filter_h: 5
+            filter_w: 5
+            stride_h: 1
+            stride_w: 1
+            border_mode: same
+            bias: True
+            init: he_normal
+            trainable: True
+            decay_mult: 1
+            lr_mult: 1
+        pool:
+            type: pool2d
+            size_h: 2
+            size_w: 2
+            stride_h: 2
+            stride_w: 2
+            border_mode: same
+        act:
+            type: relu
+        norm:
+            type: lrn
+            local_size: 5
+            alpha: 0.01
+            beta: 0.75
+            k: 1
+    conv_block_3:
+        name: conv_block_3
+        type: adaptive_conv_block
+        input: conv_block_2
+        conv:
+            type: xlayer_b
+            nb_out_feat_map: 32
+            filter_h: 5
+            filter_w: 5
+            stride_h: 1
+            stride_w: 1
+            border_mode: same
+            bias: True
+            FMN:
+                fc_1:
+                    nb_out: 10
+                    activation: tanh
+                    std_gaussian: 0.01
+                    decay_mult: 10
+                    norm: dropout
+                fc_2:
+                    nb_out: 40
+                    activation: tanh
+                    std_gaussian: 0.01
+                    decay_mult: 10
+                    norm: dropout
+                fc_3:
+                    nb_out: 12832
+                    activation: linear
+                    std_gaussian: 0.0001
+                    decay_mult: 10
+                    norm: False
+            trainable: True
+            decay_mult: 1
+            lr_mult: 1
+        act:
+            type: relu
+        norm:
+            type: lrn
+            local_size: 5
+            alpha: 0.01
+            beta: 0.75
+            k: 1
+    conv_block_4:
+        name: conv_block_4
+        type: conv_block
+        input: conv_block_3
+        conv:
+            type: conv2d
+            nb_out_feat_map: 32
+            filter_h: 5
+            filter_w: 5
+            stride_h: 1
+            stride_w: 1
+            border_mode: same
+            bias: True
+            init: he_normal
+            trainable: True
+            decay_mult: 1
+            lr_mult: 1
+        pool:
+            type: pool2d
+            size_h: 2
+            size_w: 2
+            stride_h: 2
+            stride_w: 2
+            border_mode: same
+        act:
+            type: relu
+        norm:
+            type: lrn
+            local_size: 5
+            alpha: 0.01
+            beta: 0.75
+            k: 1
+    conv_block_5:
+        name: conv_block_5
+        type: conv_block
+        input: conv_block_4
+        conv:
+            type: conv2d
+            nb_out_feat_map: 64
+            filter_h: 5
+            filter_w: 5
+            stride_h: 1
+            stride_w: 1
+            border_mode: same
+            bias: True
+            init: he_normal
+            trainable: True
+            decay_mult: 1
+            lr_mult: 1
+        act:
+            type: relu
+    conv_block_6:
+        name: conv_block_6
+        type: conv_block
+        input: conv_block_5
+        conv:
+            type: conv2d
+            nb_out_feat_map: 32
+            filter_h: 5
+            filter_w: 5
+            stride_h: 1
+            stride_w: 1
+            border_mode: same
+            bias: True
+            init: he_normal
+            trainable: True
+            decay_mult: 1
+            lr_mult: 1
+        act:
+            type: relu
+    conv_block_7:
+        name: conv_block_7
+        type: conv_block
+        input: conv_block_6
+        conv:
+            type: conv2d
+            nb_out_feat_map: 1
+            filter_h: 5
+            filter_w: 5
+            stride_h: 1
+            stride_w: 1
+            border_mode: same
+            bias: True
+            init: he_normal
+            trainable: True
+            decay_mult: 1
+            lr_mult: 1
+        act:
+            type: relu
+    loss_rgr: mse
+    loss_rgr_weight: 100
